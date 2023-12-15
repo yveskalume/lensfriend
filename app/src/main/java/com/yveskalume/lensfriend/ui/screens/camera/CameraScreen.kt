@@ -123,7 +123,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                     capturePhoto(
                         context,
                         cameraController,
-                        onPhotoCaptured ={ image ->
+                        onPhotoCaptured = { image ->
                             viewModel.addImage(image)
                             viewModel.sendPrompt(text)
                         },
@@ -199,7 +199,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                 )
 
                 TextButton(
-                    enabled = isLoading.not() && prompt.isNotBlank() && images.isNotEmpty(),
+                    enabled = isLoading.not() && prompt.isNotBlank() && images.isNotEmpty() && result.isEmpty(),
                     onClick = {
                         viewModel.sendPrompt(prompt)
                     },
