@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.speech.RecognizerIntent
 import androidx.activity.result.contract.ActivityResultContract
-import java.util.Locale
 
 class VoiceRecognitionContract : ActivityResultContract<Unit, String>() {
     override fun createIntent(context: Context, input: Unit): Intent {

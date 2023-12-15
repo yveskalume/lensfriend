@@ -61,4 +61,8 @@ class CameraViewModel : ViewModel() {
         }
     }
 
+    fun removeImage(image: Bitmap) {
+        images.remove(image)
+    }
+
 }

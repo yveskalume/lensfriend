@@ -14,10 +14,12 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -160,6 +162,8 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                             bitmap = images[index].asImageBitmap(),
                             contentDescription = null,
                             modifier = Modifier
+                                .clickable { viewModel.removeImage(images[index]) }
+                                .animateItemPlacement()
                                 .height(100.dp)
                                 .clip(RoundedCornerShape(8.dp))
                         )
@@ -225,6 +229,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                         text = result,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
+                            .animateContentSize()
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
                     )
