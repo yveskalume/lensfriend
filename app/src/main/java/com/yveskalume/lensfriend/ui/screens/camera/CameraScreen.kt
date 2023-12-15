@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -33,9 +34,13 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -65,6 +70,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.yveskalume.lensfriend.util.VoiceRecognitionContract
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
@@ -77,12 +83,6 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
     val cameraController: LifecycleCameraController =
         remember { LifecycleCameraController(context) }
 
-    val images = viewModel.images
-
-    val sheetPeekHeight by animateDpAsState(
-        targetValue = if (images.isNotEmpty()) 60.dp else 0.dp,
-        label = "sheetPeekHeight"
-    )
 
     val sheetState = rememberStandardBottomSheetState(
         initialValue = SheetValue.PartiallyExpanded,
@@ -95,6 +95,12 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
 
     val coroutineScope = rememberCoroutineScope()
 
+    val images = viewModel.images
+
+    val sheetPeekHeight by animateDpAsState(
+        targetValue = if (images.isNotEmpty()) 60.dp else 0.dp,
+        label = "sheetPeekHeight"
+    )
     val isLoading by viewModel.isLoading
     val result by viewModel.result
     val error by viewModel.error
@@ -102,6 +108,38 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
     var prompt by remember {
         mutableStateOf("")
     }
+
+    val voiceRecognitionLauncher = rememberLauncherForActivityResult(
+        contract = VoiceRecognitionContract(),
+        onResult = { text ->
+            if (text.isNotEmpty()) {
+                if (result.isNotEmpty() || !error.isNullOrEmpty()) {
+                    prompt = ""
+                    viewModel.reset()
+                }
+                if (images.isEmpty()) {
+                    capturePhoto(
+                        context,
+                        cameraController,
+                        onPhotoCaptured = viewModel::addImage,
+                        onError = {
+                            Toast
+                                .makeText(
+                                    context,
+                                    it.localizedMessage,
+                                    Toast.LENGTH_SHORT
+                                )
+                                .show()
+                        }
+                    )
+                }
+                coroutineScope.launch {
+                    sheetScaffoldState.bottomSheetState.expand()
+                }
+                viewModel.sendPrompt(text)
+            }
+        }
+    )
 
     var touchOffset: Offset? by remember {
         mutableStateOf(null)
@@ -134,6 +172,18 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                     onValueChange = { prompt = it },
                     label = {
                         Text(text = "Enter your prompt here")
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                voiceRecognitionLauncher.launch(Unit)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Mic,
+                                contentDescription = null
+                            )
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -213,6 +263,10 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                     detectTapGestures(
                         onTap = {},
                         onDoubleTap = {
+                            if (result.isNotEmpty() || !error.isNullOrEmpty()) {
+                                prompt = ""
+                                viewModel.reset()
+                            }
                             capturePhoto(
                                 context = context,
                                 cameraController = cameraController,
@@ -229,11 +283,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                             )
                         },
                         onLongPress = {
-                            if (images.isNotEmpty()) {
-                                coroutineScope.launch {
-                                    sheetState.expand()
-                                }
-                            }
+                            voiceRecognitionLauncher.launch(Unit)
                         }
                     )
                 }

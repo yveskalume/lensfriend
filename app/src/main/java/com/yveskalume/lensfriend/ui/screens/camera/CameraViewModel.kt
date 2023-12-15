@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.ai.client.generativeai.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +50,14 @@ class CameraViewModel : ViewModel() {
                     result.value += chunk.text
                 }
             isLoading.value = false
+        }
+    }
+
+    fun reset() {
+        viewModelScope.launch {
+            result.value = ""
+            error.value = null
+            images.clear()
         }
     }
 
