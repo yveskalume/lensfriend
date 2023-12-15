@@ -123,7 +123,10 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                     capturePhoto(
                         context,
                         cameraController,
-                        onPhotoCaptured = viewModel::addImage,
+                        onPhotoCaptured ={ image ->
+                            viewModel.addImage(image)
+                            viewModel.sendPrompt(text)
+                        },
                         onError = {
                             Toast
                                 .makeText(
@@ -134,11 +137,12 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                                 .show()
                         }
                     )
+                } else {
+                    viewModel.sendPrompt(text)
                 }
                 coroutineScope.launch {
                     sheetScaffoldState.bottomSheetState.expand()
                 }
-                viewModel.sendPrompt(text)
             }
         }
     )
@@ -224,16 +228,15 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                     )
                 }
 
-                if (result.isNotEmpty()) {
-                    Text(
-                        text = result,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .animateContentSize()
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    )
-                }
+                Text(
+                    text = result,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .animateContentSize()
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
                 AnimatedVisibility(visible = isLoading) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
