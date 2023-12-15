@@ -12,6 +12,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -35,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
@@ -93,7 +95,11 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
 
     val coroutineScope = rememberCoroutineScope()
 
-    var question by remember {
+    val isLoading by viewModel.isLoading
+    val result by viewModel.result
+    val error by viewModel.error
+
+    var prompt by remember {
         mutableStateOf("")
     }
 
@@ -123,8 +129,9 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                 }
 
                 OutlinedTextField(
-                    value = question,
-                    onValueChange = { question = it },
+                    enabled = isLoading.not() && result.isEmpty(),
+                    value = prompt,
+                    onValueChange = { prompt = it },
                     label = {
                         Text(text = "Enter your prompt here")
                     },
@@ -134,24 +141,55 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                 )
 
                 TextButton(
-                    onClick = { /*TODO*/ },
+                    enabled = isLoading.not() && prompt.isNotBlank() && images.isNotEmpty(),
+                    onClick = {
+                        viewModel.sendPrompt(prompt)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     colors = ButtonDefaults.textButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                     )
                 ) {
                     Text(text = "Ask")
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
+                if (error != null) {
+                    Text(
+                        text = error!!,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
+                }
+
+                if (result.isNotEmpty()) {
+                    Text(
+                        text = result,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                AnimatedVisibility(visible = isLoading) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
             }
         }
     ) { contentPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding()
+                .padding(contentPadding)
         ) {
             AndroidView(
                 modifier = Modifier
