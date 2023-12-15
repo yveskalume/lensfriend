@@ -2,7 +2,6 @@ package com.yveskalume.lensfriend.ui.screens.camera
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.Matrix
 import android.util.Log
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -14,10 +13,10 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,17 +25,20 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -49,7 +51,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
@@ -90,6 +95,10 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
 
     var question by remember {
         mutableStateOf("")
+    }
+
+    var touchOffset: Offset? by remember {
+        mutableStateOf(null)
     }
 
     BottomSheetScaffold(
@@ -150,7 +159,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                 factory = { mContext ->
                     PreviewView(mContext).apply {
                         layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-                        setBackgroundColor(Color.BLACK)
+                        setBackgroundColor(android.graphics.Color.BLACK)
                         implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                         scaleType = PreviewView.ScaleType.FILL_START
                     }.also { previewView ->
@@ -162,31 +171,48 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
             Box(modifier = Modifier
                 .zIndex(2f)
                 .fillMaxSize()
-                .combinedClickable(
-                    enabled = true,
-                    indication = rememberRipple(),
-                    interactionSource = MutableInteractionSource(),
-                    onClick = {},
-                    onDoubleClick = {
-                        capturePhoto(
-                            context = context,
-                            cameraController = cameraController,
-                            onPhotoCaptured = viewModel::addImage,
-                            onError = {
-                                Toast
-                                    .makeText(context, it.localizedMessage, Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        )
-                    },
-                    onLongClick = {
-                        if (images.isNotEmpty()) {
-                            coroutineScope.launch {
-                                sheetState.expand()
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {},
+                        onDoubleTap = {
+                            capturePhoto(
+                                context = context,
+                                cameraController = cameraController,
+                                onPhotoCaptured = viewModel::addImage,
+                                onError = {
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            it.localizedMessage,
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                }
+                            )
+                        },
+                        onLongPress = {
+                            if (images.isNotEmpty()) {
+                                coroutineScope.launch {
+                                    sheetState.expand()
+                                }
                             }
                         }
+                    )
+                }
+            ) {
+                if (touchOffset != null) {
+                    Surface(
+                        shape = CircleShape,
+                        border = BorderStroke(width = 1.dp, color = Color.White),
+                        modifier = Modifier
+                            .size(80.dp)
+                            .offset(touchOffset!!.x.dp, touchOffset!!.y.dp)
+
+                    ) {
+
                     }
-                ))
+                }
+            }
         }
 
     }
