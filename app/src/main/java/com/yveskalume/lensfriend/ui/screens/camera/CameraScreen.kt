@@ -183,6 +183,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                     },
                     trailingIcon = {
                         IconButton(
+                            enabled = isLoading.not(),
                             onClick = {
                                 voiceRecognitionLauncher.launch(Unit)
                             }
@@ -302,7 +303,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                         border = BorderStroke(width = 1.dp, color = Color.White),
                         modifier = Modifier
                             .size(80.dp)
-                            .offset(touchOffset!!.x.dp, touchOffset!!.y.dp)
+                            .offset(0.dp, 0.dp)
 
                     ) {
 
