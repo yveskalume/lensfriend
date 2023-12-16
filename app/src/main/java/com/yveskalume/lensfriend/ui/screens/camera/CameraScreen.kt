@@ -115,8 +115,8 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
         contract = VoiceRecognitionContract(),
         onResult = { text ->
             if (text.isNotEmpty()) {
+                prompt = text
                 if (result.isNotEmpty() || !error.isNullOrEmpty()) {
-                    prompt = ""
                     viewModel.reset()
                 }
                 if (images.isEmpty()) {
