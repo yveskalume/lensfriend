@@ -198,7 +198,11 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                             bitmap = images[index].asImageBitmap(),
                             contentDescription = null,
                             modifier = Modifier
-                                .clickable { viewModel.removeImage(images[index]) }
+                                .clickable {
+                                    if (isLoading.not() && result.isNotEmpty()) {
+                                        viewModel.removeImage(images[index])
+                                    }
+                                }
                                 .animateItemPlacement()
                                 .height(100.dp)
                                 .clip(RoundedCornerShape(8.dp))
