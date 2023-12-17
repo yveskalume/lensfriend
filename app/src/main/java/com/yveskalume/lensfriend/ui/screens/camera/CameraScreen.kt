@@ -200,7 +200,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                             contentDescription = null,
                             modifier = Modifier
                                 .clickable {
-                                    if (isLoading.not() && result.isNotEmpty()) {
+                                    if (isLoading.not() && result.isEmpty()) {
                                         viewModel.removeImage(images[index])
                                     }
                                 }
