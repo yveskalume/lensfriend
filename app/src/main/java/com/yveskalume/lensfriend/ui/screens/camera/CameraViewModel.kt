@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
+import com.yveskalume.lensfriend.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -18,7 +19,7 @@ class CameraViewModel : ViewModel() {
     private val generativeModel by lazy {
         GenerativeModel(
             modelName = "gemini-pro-vision",
-            apiKey = " "
+            apiKey = BuildConfig.GEMINI_API_KEY,
         )
     }
 
