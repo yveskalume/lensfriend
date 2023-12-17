@@ -2,6 +2,7 @@ package com.yveskalume.lensfriend.ui.screens.camera
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.util.Log
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -73,6 +74,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yveskalume.lensfriend.util.VoiceRecognitionContract
 import com.yveskalume.lensfriend.util.getCameraProvider
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executor
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -362,12 +364,24 @@ private fun capturePhoto(
             }
             val imageBitmap = image.toBitmap()
 
-            val correctedBitmap: Bitmap = with(imageBitmap) {
+            val outputStream = ByteArrayOutputStream()
+
+            val isCompressed = imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream)
+
+            val byteArray = outputStream.toByteArray()
+
+            val compressedBitmap: Bitmap = if (isCompressed) {
+                BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+            } else {
+                imageBitmap
+            }
+
+            val rotatedBitmap = with(compressedBitmap) {
                 Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
             }
 
 
-            onPhotoCaptured(correctedBitmap)
+            onPhotoCaptured(rotatedBitmap)
             image.close()
         }
 
