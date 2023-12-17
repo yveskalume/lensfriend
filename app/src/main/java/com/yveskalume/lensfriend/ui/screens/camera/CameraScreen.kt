@@ -21,6 +21,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -296,13 +297,7 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = {
-                            lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                                CameraSelector.LENS_FACING_FRONT
-                            } else {
-                                CameraSelector.LENS_FACING_BACK
-                            }
-                        },
+                        onTap = {},
                         onDoubleTap = {
                             touchOffset = it
                             if (result.isNotEmpty() || !error.isNullOrEmpty()) {
@@ -329,17 +324,21 @@ fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
                         }
                     )
                 }
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragEnd = {
+                            lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                                CameraSelector.LENS_FACING_FRONT
+                            } else {
+                                CameraSelector.LENS_FACING_BACK
+                            }
+                        },
+                        onVerticalDrag = { change, dragAmount ->
+
+                        }
+                    )
+                }
             ) {
-//                if (touchOffset != null) {
-//                    Box(
-//                        modifier = Modifier
-//                            .size(80.dp)
-//                            .offset(0.dp, 0.dp)
-//                            .clip(CircleShape)
-//                            .border(width = 1.dp, color = Color.White)
-//
-//                    )
-//                }
             }
         }
 
